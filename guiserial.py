@@ -141,10 +141,14 @@ class SerialThread(threading.Thread):
                     tlno = 0
                     # setting ack to true before first line read
                     ack = True
+                    success=0
+                    fail=0
+                    scriptlines=0
                     for line in file:
                         tlno += 1
                         currentscript.add_line(line, tlno)
                         if line.startswith("$PFAL"):
+                            scriptlines+=1
                             line=line.replace('\n', '')
                             cmd=line
                             #calling a parse command to set it in the required fromat to be send via serial
@@ -162,11 +166,13 @@ class SerialThread(threading.Thread):
                                 if line.__contains__("SUCCESS"):
                                     print (cmd)
                                     print(line)
+                                    success+=1
                                     ack = True
                                     break
                                 elif line.__contains__("ERROR"):
                                     print(cmd)
                                     print(line)
+                                    fail+=1
                                     ack = True
                                     break
 
@@ -177,7 +183,9 @@ class SerialThread(threading.Thread):
 
                     currentscript.print_script_summary()
                     print("scripting completed returning FALSE to scripting_in_progress")
-                    return True
+                    result = "Script Summary | Total Lines Send {} | Successful {} | Failed {}".format(scriptlines, success, fail)
+                    print(result)
+                    return result
         else:
             print ("Serial Error - Cannot write")
 
@@ -358,6 +366,9 @@ class App(tk.Tk):
     def script_device(self):
         self.scripting_in_progress=True
         result = self.thread.script_device("script")
+        self.MainLog.insert('end', result)
+        # to show the last entry
+        self.MainLog.see('end')
         self.scripting_in_progress = False
 
     # function that writes command entered to serial line

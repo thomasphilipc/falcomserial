@@ -273,9 +273,10 @@ class SerialThread(threading.Thread):
 
 
 
-    def check_ack(self,command):
+    def check_ack(self,command,checkphrase):
 
         print ("entered checkack")
+        checkphrase=checkphrase
         ack = True
         success = 0
         fail = 0
@@ -295,7 +296,7 @@ class SerialThread(threading.Thread):
                 content = str(self.queue.get())
                 #  check data read for patterns here.
                 line = content
-                if line.__contains__("IMEI"):
+                if line.__contains__(checkphrase):
                     print(line)
                     responseline = line
                 elif line.__contains__("SUCCESS"):
@@ -318,10 +319,12 @@ class SerialThread(threading.Thread):
         else:
             state = "Not Obtained"
 
-        result = "Command:{}|ResponseState:{}|ResponseLine:{}".format(cmd,state,responseline)
 
+        summary = "Command:{}|ResponseState:{}|ResponseLine:{}".format(cmd,state,responseline)
+        result = (cmd,state,responseline)
         print("ack completed")
-        print(result)
+        print(summary)
+        return result
 
 
 #------------------------------------------------------
@@ -404,39 +407,106 @@ class asset:
 
 
 
-def enable_socket():
+# def enable_socket():
+#
+#     print ("enabling socket")
+#
+#     local_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+#
+#     server_address = ('localhost',10000)
+#     local_socket.bind(server_address)
+#
+#
+#     local_socket.listen(1)
+#
+#
+#
+#      #Wait for a connection
+#     local_socket, client_address = local_socket.accept()
+#
+#
+#
+#
+#     try:
+#         while True:
+#             data = local_socket.recv(16)
+#             if data:
+#                 print("received data:", data)
+#             else:
+#                 break
+#
+#
+#     finally:
+#     # Clean up the connection
+#         local_socket.close()
 
-    print ("enabling socket")
 
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-
-    server_address = ('localhost',10000)
-    s.bind(server_address)
-
-
-    s.listen(1)
+# ------------------------------------------------------
+# ------------------------------------------------------
+# ---------- TCP/IP CONNECTION VIA THREADING -----------
+# ------------------------------------------------------
+# ------------------------------------------------------
 
 
+class TCPThread(threading.Thread):
+    def __init__(self, tcpqueue ,local_socket):
+        threading.Thread.__init__(self)
+        self.queue = tcpqueue
+        self.local_socket =local_socket
+        self.serialError = False
 
-     #Wait for a connection
-    s, client_address = s.accept()
-
-
-
-
-    try:
+    def run(self):
+        # this function runs to put the serial read line to the queue
         while True:
-            data = s.recv(16)
-            if data:
-                print("received data:", data)
-            else:
+
+
+
+            try:
+                self.local_socket.listen(1)
+
+                # Wait for a connection
+                self.local_socket, client_address = self.local_socket.accept()
+
+                try:
+                    while True:
+                        data = self.local_socket.recv(16)
+                        if data:
+                            data = data.decode()
+                            self.queue.put(data)
+                            print ("running in thread")
+                            print("received data:", data)
+                        else:
+                            break
+
+
+                finally:
+                    # Clean up the connection
+                    self.local_socket.close()
+
+            except serial.serialutil.SerialException:
+                self.serialError = True
+                print("error occured")
                 break
 
-
-    finally:
-    # Clean up the connection
-        s.close()
-
+    def write(self, command):
+        # function to write command entered in the line to the serial port
+        # receives the command to write to the serial port
+        if self.serialError == False:
+            print(command)
+            if command:
+                cmd = str(command)
+            else:
+                # assigns a default command if a blank sent is entered
+                cmd = '$PFAL,GSM.IMEI'
+            # converts data to be sent to the serial into asciii
+            data = (cmd.encode('ascii') + "\r\n".encode('ascii'))
+            # print the data
+            print(data)
+            # write to the serial port
+            # \r\n is CR+LF carrriage return and line feed
+            self.serial.write(data)
+        else:
+            print("Serial Error - Cannot write")
 
 
 #------------------------------------------------------
@@ -478,9 +548,18 @@ class App(tk.Tk):
         self.serial = serial.Serial(port=self.portselected,baudrate=self.baud_rate)
         # a serial port is passed along the thread along with the queue.
         self.thread = SerialThread(self.queue,self.serial)
+        # a tcp port connection
+        self.tcpqueue = queue.Queue()
+        self.local_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.server_address = ('localhost', 10000)
+        self.local_socket.bind(self.server_address)
+        self.thread2 = TCPThread(self.tcpqueue,self.local_socket)
+        #starting the threads
         self.thread.start()
+        self.thread2.start()
         # a read serial port function is called
         self.read_serial_queue()
+        self.read_tcp_queue()
 
     # function calling the script_device fucntion via GUI CLICK
     def script_device(self):
@@ -512,13 +591,33 @@ class App(tk.Tk):
                     print (line)
                     if not line.startswith('$GP'):
                         # data is inserted into the GUI
-                        self.MainLog.insert('end', line)
+                        self.MainLog.insert('end', 'Serial Socket:'+line)
                         # to show the last entry
                         self.MainLog.see('end')
                 except queue.Empty:
                     pass
             # the function is called every 1/10 second
             self.after(100, self.read_serial_queue)
+
+    def read_tcp_queue(self):
+
+
+        self.scripting_in_progress=False
+        if not self.scripting_in_progress:
+            while self.tcpqueue.qsize():
+                try:
+                    content =str(self.tcpqueue.get())
+                    # check data read for patterns here.
+
+                    line=content
+                    print (line)
+                    self.MainLog.insert('end', 'TCP Socket:'+line)
+                    # to show the last entry
+                    self.MainLog.see('end')
+                except queue.Empty:
+                    pass
+            # the function is called every 1/10 second
+            self.after(100, self.read_tcp_queue)
 
 
     def check_serial(self):
@@ -556,4 +655,4 @@ class App(tk.Tk):
 
 app = App()
 app.mainloop()
-enable_socket()
+#enable_socket()

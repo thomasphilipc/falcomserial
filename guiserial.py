@@ -124,11 +124,91 @@ class SerialThread(threading.Thread):
 
 
         # function to write script
+
+        #if there is a serial no error on serial connection then proceed
         if self.serialError == False:
 
+
+
             print(type)
-            #checks if type is script
+            #checks if type is script . currently this is the only feature
             if type=="script":
+
+                ack = True
+                success = 0
+                fail = 0
+
+                # set command to obtain IMEI number
+                cmd = "$PFAL,GSM.IMEI"
+
+                content = self.parse_command(cmd)
+                # if ack is true , as this is the first command we write
+                if ack:
+                    self.serial.write(content)
+                    # after write we set ack to false as we need to wait for confirmation on success
+                    ack = False
+                    # below loop keeps running and reading responses on the serial line
+                    while True:
+                        content = str(self.queue.get())
+                        #  check data read for patterns here.
+                        line = content
+                        if line.__contains__("IMEI"):
+                            print(line)
+                        elif line.__contains__("SUCCESS"):
+                            print(cmd)
+                            print(line)
+                            success += 1
+                            ack = True
+                            break
+                        elif line.__contains__("ERROR"):
+                            print(cmd)
+                            print(line)
+                            fail += 1
+                            ack = True
+                            break
+
+                print("IMEI queried")
+
+                ack = True
+                success = 0
+                fail = 0
+
+                cmd = "$PFAL,Cnf.Get,DEVICE.NAME"
+
+                content = self.parse_command(cmd)
+                # if ack is true , write the next command
+                if ack:
+                    self.serial.write(content)
+                    # after write we set ack to false as we need to wait for confirmation on success
+                    ack = False
+                    # below loop keeps running and reading
+                    while True:
+                        content = str(self.queue.get())
+                        #  check data read for patterns here.
+                        line = content
+
+                        if line.__contains__("DEVICE.NAME"):
+                            print(line)
+                        elif line.__contains__("SUCCESS"):
+                            print(cmd)
+                            print(line)
+                            success += 1
+                            ack = True
+                            break
+                        elif line.__contains__("ERROR"):
+                            print(cmd)
+                            print(line)
+                            fail += 1
+                            ack = True
+                            break
+
+                print("DeviceName queried")
+
+
+
+
+
+
                 # iterates through each file in the folder called falcomeserial
                 for filename in os.listdir(requiredDir):
                     print(filename)
@@ -182,26 +262,66 @@ class SerialThread(threading.Thread):
 
 
                     currentscript.print_script_summary()
-                    print("scripting completed returning FALSE to scripting_in_progress")
+                    print("scripting completed")
                     result = "Script Summary | Total Lines Send {} | Successful {} | Failed {}".format(scriptlines, success, fail)
                     print(result)
                     return result
+
+
         else:
             print ("Serial Error - Cannot write")
 
 
 
-    def check_ack(self,line):
+    def check_ack(self,command):
 
         print ("entered checkack")
-        # lineread=self.serial.readline()
-        # data= lineread.decode()
-        # print (data)
-        #
-        # if data.__contains__("SUCCESS"):
-        #     return True
-        # else:
-        #     return False
+        ack = True
+        success = 0
+        fail = 0
+        responseline = "not avaialable"
+
+        # set command to obtain IMEI number
+        cmd = command
+
+        content = self.parse_command(cmd)
+        # if ack is true , as this is the first command we write
+        if ack:
+            self.serial.write(content)
+            # after write we set ack to false as we need to wait for confirmation on success
+            ack = False
+            # below loop keeps running and reading responses on the serial line
+            while True:
+                content = str(self.queue.get())
+                #  check data read for patterns here.
+                line = content
+                if line.__contains__("IMEI"):
+                    print(line)
+                    responseline = line
+                elif line.__contains__("SUCCESS"):
+                    print(cmd)
+                    print(line)
+                    success += 1
+                    ack = True
+                    break
+                elif line.__contains__("ERROR"):
+                    print(cmd)
+                    print(line)
+                    fail += 1
+                    ack = True
+                    break
+
+        if success>0 :
+            state = "True"
+        elif fail>0:
+            state = "False"
+        else:
+            state = "Not Obtained"
+
+        result = "Command:{}|ResponseState:{}|ResponseLine:{}".format(cmd,state,responseline)
+
+        print("ack completed")
+        print(result)
 
 
 #------------------------------------------------------

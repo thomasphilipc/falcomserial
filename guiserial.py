@@ -7,6 +7,7 @@ import socket
 import queue
 import tkinter as tk
 import serial.tools.list_ports
+from PIL import Image,ImageTk
 
 
 #------------------------------------------------------
@@ -134,12 +135,17 @@ class SerialThread(threading.Thread):
             #checks if type is script . currently this is the only feature
             if type=="script":
 
+                # set command to obtain IMEI number
+                cmd = "$PFAL,GSM.IMEI"
+
+                command,state,responseline=self.check_ack(cmd,"IMEI:")
+                print (" Command {} | state {} | responseline {}".format(command,state,responseline))
+
                 ack = True
                 success = 0
                 fail = 0
 
-                # set command to obtain IMEI number
-                cmd = "$PFAL,GSM.IMEI"
+
 
                 content = self.parse_command(cmd)
                 # if ack is true , as this is the first command we write
@@ -203,10 +209,6 @@ class SerialThread(threading.Thread):
                             break
 
                 print("DeviceName queried")
-
-
-
-
 
 
                 # iterates through each file in the folder called falcomeserial
@@ -399,47 +401,6 @@ class asset:
         self.succeeded_lines.append(linenumber)
 
 
-#------------------------------------------------------
-#------------------------------------------------------
-#------ BELOW IS THE SOCKET CONTROL FOR TCP/IP --------
-#------------------------------------------------------
-#------------------------------------------------------
-
-
-
-# def enable_socket():
-#
-#     print ("enabling socket")
-#
-#     local_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-#
-#     server_address = ('localhost',10000)
-#     local_socket.bind(server_address)
-#
-#
-#     local_socket.listen(1)
-#
-#
-#
-#      #Wait for a connection
-#     local_socket, client_address = local_socket.accept()
-#
-#
-#
-#
-#     try:
-#         while True:
-#             data = local_socket.recv(16)
-#             if data:
-#                 print("received data:", data)
-#             else:
-#                 break
-#
-#
-#     finally:
-#     # Clean up the connection
-#         local_socket.close()
-
 
 # ------------------------------------------------------
 # ------------------------------------------------------
@@ -453,7 +414,7 @@ class TCPThread(threading.Thread):
         threading.Thread.__init__(self)
         self.queue = tcpqueue
         self.local_socket =local_socket
-        self.serialError = False
+        self.TCPError = False
 
     def run(self):
         # this function runs to put the serial read line to the queue
@@ -461,7 +422,7 @@ class TCPThread(threading.Thread):
 
 
 
-            try:
+           try:
                 self.local_socket.listen(1)
 
                 # Wait for a connection
@@ -469,45 +430,222 @@ class TCPThread(threading.Thread):
 
                 try:
                     while True:
-                        data = self.local_socket.recv(16)
+                        data = self.local_socket.recv(1024)
                         if data:
-                            data = data.decode()
+                            #data = data.decode()
                             self.queue.put(data)
-                            print ("running in thread")
-                            print("received data:", data)
+                            print("received raw data:", data)
                         else:
                             break
 
 
-                finally:
-                    # Clean up the connection
-                    self.local_socket.close()
+                except (ConnectionResetError, OSError):
+                   print("tcp socket error occured")
+                   break
 
-            except serial.serialutil.SerialException:
-                self.serialError = True
-                print("error occured")
-                break
+
+           finally:
+               # Clean up the connection
+               print("Connection Has been closed")
+               self.local_socket.close()
 
     def write(self, command):
+
+
+        cmd = "$PFAL,GSM.IMEI"
+
+        command, state, responseline = self.check_ack(cmd, "IMEI:")
+        print(" Command {} | state {} | responseline {}".format(command, state, responseline))
+
+        ack = True
+        success = 0
+        fail = 0
+
         # function to write command entered in the line to the serial port
         # receives the command to write to the serial port
-        if self.serialError == False:
-            print(command)
-            if command:
-                cmd = str(command)
-            else:
-                # assigns a default command if a blank sent is entered
-                cmd = '$PFAL,GSM.IMEI'
-            # converts data to be sent to the serial into asciii
-            data = (cmd.encode('ascii') + "\r\n".encode('ascii'))
-            # print the data
-            print(data)
-            # write to the serial port
-            # \r\n is CR+LF carrriage return and line feed
-            self.serial.write(data)
-        else:
-            print("Serial Error - Cannot write")
+        print(command)
+        if command:
+            cmd = str(command)
 
+        else:
+            # assigns a default command if a blank sent is entered
+            cmd = '$PFAL,GSM.IMEI'
+        # converts data to be sent to the serial into asciii
+        data = (cmd.encode('ascii') + "\r\n".encode('ascii'))
+        # print the data
+        print(data)
+        # write to the serial port
+        # \r\n is CR+LF carrriage return and line feed
+        self.local_socket.send(data)
+
+
+    def check_ack(self, command, checkphrase):
+
+        print("entered checkack")
+        check = checkphrase
+        print("CheckPhrase is {}".format(check))
+        ack = True
+        success = 0
+        fail = 0
+        responseline = "not avaialable"
+
+        # set command to obtain IMEI number
+        cmd = command
+
+        content = self.parse_command(cmd)
+        # if ack is true , as this is the first command we write
+        if ack:
+            self.local_socket.send(content)
+            # after write we set ack to false as we need to wait for confirmation on success
+            ack = False
+            # below loop keeps running and reading responses on the serial line
+            while True:
+                content = str(self.queue.get())
+                #  check data read for patterns here.
+                line = content
+                print(line)
+                if line.__contains__(check):
+                    responseline = line
+                if line.__contains__("SUCCESS"):
+                    success += 1
+                    ack = True
+                if line.__contains__("ERROR"):
+                    fail += 1
+                    ack = True
+                break
+
+        if success > 0:
+            state = "True"
+        elif fail > 0:
+            state = "False"
+        else:
+            state = "Not Obtained"
+
+        summary = "Command:{}|ResponseState:{}|ResponseLine:{}".format(cmd, state, responseline)
+        result = (cmd, state, responseline)
+        print("ack completed")
+        return result
+
+    def parse_command(self,cmd):
+        #fucntion to add Carriage Return and Line Feed
+        data = (cmd.encode('ascii') + "\r\n".encode('ascii'))
+        return data
+
+
+    def check_device(self):
+
+        result = ""
+        # checks if type is script . currently this is the only feature
+        cmd = "$PFAL,GSM.IMEI"
+
+        command, state, responseline = self.check_ack(cmd, "IMEI:")
+        result+=responseline
+
+        print ("Command send: {}".format(command))
+                    # iterates through each file in the folder called falcomeserial
+
+        cmd = "$PFAL,GSM.SIMID"
+        command, state, responseline = self.check_ack(cmd, "SIMID:")
+        result += responseline
+
+        print("Command send: {}".format(command))
+        # iterates through each file in the folder called falcomeserial
+
+
+        cmd = "$PFAL,MSG.VERSION.COMPLETE.EXT"
+        command, state, responseline = self.check_ack(cmd, "Software:")
+        result += responseline
+        print("Command send: {}".format(command))
+        # iterates through each file in the folder called falcomeserial
+
+
+
+        return result
+
+
+    def script_device(self,type):
+
+        requiredDir = 'C:\\falcomserial'
+
+
+        # function to write script
+
+        #if there is a serial no error on serial connection then proceed
+        if self.TCPError == False:
+
+            print(type)
+            #checks if type is script . currently this is the only feature
+            if type=="script":
+
+                # set command to obtain IMEI number
+                cmd = "$PFAL,GSM.IMEI"
+
+                command,state,responseline=self.check_ack(cmd,"IMEI:")
+                print (" Command {} | state {} | responseline {}".format(command,state,responseline))
+
+
+
+                # iterates through each file in the folder called falcomeserial
+                for filename in os.listdir(requiredDir):
+                    print(filename)
+                    # opening the file
+                    file = open(requiredDir + "\\" + filename, 'r', errors='replace')
+                    newfile_flag = 1
+                    filename = filename.split('.txt')
+                    print('Parsing {}'.format(filename[0]))
+                    currentscript = script(filename[0])
+                    tlno = 0
+                    # setting ack to true before first line read
+                    ack = True
+                    success=0
+                    fail=0
+                    scriptlines=0
+                    for line in file:
+                        tlno += 1
+                        currentscript.add_line(line, tlno)
+                        if line.startswith("$PFAL"):
+                            scriptlines+=1
+                            line=line.replace('\n', '')
+                            cmd=line
+                            #calling a parse command to set it in the required fromat to be send via serial
+                            content = self.parse_command(cmd)
+                            # if ack is true , meaning we received a success or if first command then write
+                            if ack:
+                                self.local_socket.send(content)
+                            #after write we set ack to false as we need to wait for confirmation on success
+                            ack=False
+                            # below loop keeps running and reading
+                            while True:
+                                content = str(self.queue.get())
+                                #  check data read for patterns here.
+                                line = content
+                                if line.__contains__("SUCCESS"):
+                                    print (cmd)
+                                    print(line)
+                                    success+=1
+                                    ack = True
+                                    break
+                                elif line.__contains__("ERROR"):
+                                    print(cmd)
+                                    print(line)
+                                    fail+=1
+                                    ack = True
+                                    break
+
+
+
+
+
+
+                    currentscript.print_script_summary()
+                    print("scripting completed")
+                    result = "Script Summary | Total Lines Send {} | Successful {} | Failed {}".format(scriptlines, success, fail)
+                    print(result)
+                    return result
+
+
+        else:
+            print ("TCP Error - Cannot write")
 
 #------------------------------------------------------
 #------------------------------------------------------
@@ -520,27 +658,38 @@ class App(tk.Tk):
         tk.Tk.__init__(self)
         self.title("Kraken Tentacles - Falcom Local Script Loader ")
         self.geometry("1360x750")
-        frameLabel = tk.Frame(self, padx=10, pady =10)
+        image = Image.open("logo.png")
+        logo = ImageTk.PhotoImage(image)
+        frameLabel = tk.Frame(self, padx=10, pady =10 ,background="white")
+        self.label = tk.Label(frameLabel, image=logo,background="white")
+        self.label.pack()
+
         self.MainLog = tk.Text(frameLabel, wrap='word', bg=self.cget('bg'), relief='flat')
+        self.MainLog.configure(state="disabled")
         frameLabel.pack()
-        self.scrollbar = tk.Scrollbar(frameLabel)
-        self.scrollbar.pack(side='right', fill='y')
+        # self.scrollbar = tk.Scrollbar(frameLabel)
+        # self.scrollbar.pack(side='right', fill='y')
         self.MainLog.pack()
-        frameLabel2 = tk.Frame(self)
-        self.forwardcommand= tk.Entry(frameLabel2 ,  width = 75 )
+        #frameLabel2 = tk.Frame(self , padx=10, pady =10,background="white")
+        self.forwardcommand= tk.Entry(frameLabel ,  width = 75 )
         self.forwardcommand.pack( side='left')
-        frameLabel2.pack()
-        self.sendbutton = tk.Button(frameLabel2, text = "Send",  command = lambda: self.write_serial())
+        #frameLabel2.pack()
+        self.sendbutton = tk.Button(frameLabel, text = "Send",  command = lambda: self.write_data())
         self.sendbutton.pack(side='right' ,  padx=10, pady =10)
-        self.scriptbutton = tk.Button(frameLabel2, text ="ScriptDevice" , command = lambda: self.script_device())
+        self.scriptbutton = tk.Button(frameLabel, text ="ScriptDevice" , command = lambda: self.script_device())
         self.scriptbutton.pack(side='right', padx=10, pady=10)
+        self.iconbitmap("logo_rYO_icon.ico")
+
+
+        self.label.image = logo  # keep a reference!
+        # setting the scripting_in_progress to False in the begining
+        self.scripting_in_progress=False
         # a queue is present to save the read data - the data is read periodically
         self.queue = queue.Queue()
-        self.scripting_in_progress=False
+        self.queue.empty()
         # get which port that the device needs to be selected
         self.portselected = self.check_serial()
-        print(self.portselected)
-        print(self.portselected)
+        print (self.portselected)
         # pass port to enable serial connection
         self.baud_rate = 115200
         self.timeout = 1
@@ -548,35 +697,66 @@ class App(tk.Tk):
         self.serial = serial.Serial(port=self.portselected,baudrate=self.baud_rate)
         # a serial port is passed along the thread along with the queue.
         self.thread = SerialThread(self.queue,self.serial)
-        # a tcp port connection
+        # a tcp port connection via threading
         self.tcpqueue = queue.Queue()
+        self.tcpqueue.empty()
         self.local_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.server_address = ('localhost', 10000)
+        self.server_address = ('192.168.11.17', 8123)
         self.local_socket.bind(self.server_address)
         self.thread2 = TCPThread(self.tcpqueue,self.local_socket)
-        #starting the threads
+        #starting the threads: thread is for serial and thread2 is for tcp
         self.thread.start()
         self.thread2.start()
+        # a read tcp port function is called
+        print("Sleeping for 5 seconds")
+        time.sleep(5)
+        self.read_tcp_queue()
         # a read serial port function is called
         self.read_serial_queue()
-        self.read_tcp_queue()
+
 
     # function calling the script_device fucntion via GUI CLICK
     def script_device(self):
         self.scripting_in_progress=True
-        result = self.thread.script_device("script")
-        self.MainLog.insert('end', result)
-        # to show the last entry
-        self.MainLog.see('end')
-        self.scripting_in_progress = False
+        if self.portselected == None:
+            print("Calling tcp check device")
+            result = self.thread2.check_device()
+            self.MainLog.configure(state="normal")
+            self.MainLog.insert('end', result)
+            # to show the last entry
+            self.MainLog.see('end')
+            self.MainLog.configure(state="disabled")
+            self.scripting_in_progress = False
+        else:
+            result = self.thread.script_device("script")
+            self.MainLog.configure(state="normal")
+            self.MainLog.insert('end', result)
+            # to show the last entry
+            self.MainLog.see('end')
+            self.MainLog.configure(state="disabled")
+            self.scripting_in_progress = False
+
+
+
 
     # function that writes command entered to serial line
-    def write_serial(self):
-        param= self.forwardcommand.get()
-        print("written {} to serial line".format(param))
-        #
-        self.forwardcommand.delete(0,'end')
-        self.thread.write(param)
+    def write_data(self):
+
+        if self.portselected == None:
+            print (" No serial connection")
+            param = self.forwardcommand.get()
+            print("written {} to tcp line".format(param))
+            #
+            self.forwardcommand.delete(0, 'end')
+            self.thread2.write(param)
+
+        else:
+
+            param= self.forwardcommand.get()
+            print("written {} to serial line".format(param))
+            #
+            self.forwardcommand.delete(0,'end')
+            self.thread.write(param)
 
     # function to read from the serial queue
     def read_serial_queue(self):
@@ -591,33 +771,39 @@ class App(tk.Tk):
                     print (line)
                     if not line.startswith('$GP'):
                         # data is inserted into the GUI
+                        self.MainLog.configure(state="normal")
                         self.MainLog.insert('end', 'Serial Socket:'+line)
                         # to show the last entry
                         self.MainLog.see('end')
+                        self.MainLog.configure(state="disabled")
                 except queue.Empty:
                     pass
             # the function is called every 1/10 second
             self.after(100, self.read_serial_queue)
 
     def read_tcp_queue(self):
+        print("entered tcp queue read fucntion")
 
-
-        self.scripting_in_progress=False
-        if not self.scripting_in_progress:
+        if  not self.scripting_in_progress:
+            line = ''
             while self.tcpqueue.qsize():
+                print("entered in queue")
                 try:
-                    content =str(self.tcpqueue.get())
+                    content = self.tcpqueue.get()
                     # check data read for patterns here.
+                    print ("content in tcp queue")
 
                     line=content
-                    print (line)
-                    self.MainLog.insert('end', 'TCP Socket:'+line)
+                    print (str(line.decode()))
+                    self.MainLog.configure(state="normal")
+                    self.MainLog.insert('end', 'TCP Socket:'+str(line.decode()))
                     # to show the last entry
                     self.MainLog.see('end')
+                    self.MainLog.configure(state="disabled")
                 except queue.Empty:
                     pass
             # the function is called every 1/10 second
-            self.after(100, self.read_tcp_queue)
+                self.after(100, self.read_tcp_queue)
 
 
     def check_serial(self):
@@ -630,27 +816,37 @@ class App(tk.Tk):
         # all the ports are stored as a list in ports variable
         ports = list(serial.tools.list_ports.comports())
         i = 1
+
+        total_ports_found=ports.__len__()
+        print (total_ports_found)
+
+        if  total_ports_found>0:
         # iterate through the ports to build a list
-        for p in ports:
-            # create a port class
-            currentport = serialport(i, p.device, p.description)
-            # add the port to another serial list
-            serialportlist.append(currentport)
-            # print all the port details
-            currentport.print_port_details()
-            i += 1
+            for p in ports:
+                # create a port class
+                currentport = serialport(i, p.device, p.description)
+                # add the port to another serial list
+                serialportlist.append(currentport)
+                # print all the port details
+                currentport.print_port_details()
+                i += 1
 
-        # get input to which port they want to connect
-        print("Please select s.no for the port that you want to connect to")
-        a = input()
+            # get input to which port they want to connect
+            print("Please select s.no for the port that you want to connect to")
+            a = input()
 
-        # get the port selection
-        selectedport = return_port(a, serialportlist)
+            # get the port selection
+            selectedport = return_port(a, serialportlist)
 
-        print("you selected {}".format(selectedport))
+            print("you selected {}".format(selectedport))
+            # return the selected port
+            return selectedport
 
-        # return the selected port
-        return selectedport
+        elif total_ports_found==0:
+            print("There are no ports connected")
+            return None
+
+
 
 
 app = App()

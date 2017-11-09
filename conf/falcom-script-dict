@@ -1,0 +1,53 @@
+updated-timestamp: 9-Nov 2017
+updated-by: thomas.philip@roamworks.com
+
+dict:
+  - GF: set geofence
+  - AL: set Alarm
+  - Timer0: Timer 0
+  - Timer1: Timer 1
+  - Timer2: Timer 2
+  - Timer3: Timer 3
+  - Timer4: Timer 4
+  - Timer5: Timer 5
+  - start: timer start
+  - cyclic: cyclic timer
+  - single: single timer
+  - GPS: GPS
+  - Nav : Navigation
+  - sSpeed : current speed
+  - nvCounter0 : counter 0
+  - nvCounter1 : counter 1
+  - nvCounter2 : counter 2
+  - nvCounter3 : counter 3
+  - nvCounter4 : counter 4
+  - nvCounter5 : counter 5
+  - increment : increment
+  - decrement : decrement
+  - eMoving : event start moving
+  - sMoving : check if moving
+  - eStanding : check if standing
+  - IO : input/output
+  - Motion : motion
+  - Position0 : position 0
+  - Position1 : position 1
+  - Position2 : position 2
+  - Position3 : position 3
+  - Position4 : position 4
+  - sFix : check fix validity
+  - s1 : status of
+  - s2 : status of
+  - s3 : status of
+  - s4 : status of
+  - s5 : status of
+  - e1 : event 1 triggered
+  - e2 : event 2 triggered
+  - e3 : event 3 triggered
+  - e4 : event 4 triggered
+  - e5 : event 5 triggered
+  - = : equals
+  - & : and
+  - ? : or
+
+
+

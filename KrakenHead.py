@@ -37,7 +37,7 @@ import re
 
 
 
-# initialize functions
+# initialize functions again
 def initialize():
     print("Read configuration file")
 

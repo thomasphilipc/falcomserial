@@ -150,10 +150,12 @@ $PFAL,Cnf.Backup"""
     alarm_collection=[]
     counter_collection=[]
     timer_collection=[]
+    trigger_collection=[]
     for line in script.splitlines():
         if line:
             #print(line)
             if line.startswith("$"):
+                #
                 line=line.capitalize()
                 #print(line)
                 total_line += 1
@@ -168,28 +170,40 @@ $PFAL,Cnf.Backup"""
                 print(result)
                 status=verify_line(line,result)
                 # print(status)
+                #status true means the actual line and the broken up list are the same
                 if status:
                     for item in result:
                         #print(item)
+                        # if item has $ or PFAL - proceed
                         if item in ['$','PFAL']:
                             pass
+                        #if starts with alarm then record alarm
                         elif str(item).startswith('al'):
                             alarm=str(item)
                             alarm_line=alarm.split('al')
                             print ("Alarm line used {}".format(alarm_line[1]))
                             alarm_collection.append(alarm_line[1])
+                        #if starts with nvcounter then record counter
                         elif str(item).startswith('nvcounter'):
                             counter=str(item)
                             counter_line=counter.split('nvcounter')
                             if counter_line[1]:
                                 print ("Counter used {}".format(counter_line[1]))
                                 counter_collection.append(counter_line[1])
+                        #if starts with timer then record counter
                         elif str(item).startswith('timer'):
                             timer=str(item)
                             timer_line=timer.split('timer')
                             if timer_line[1]:
                                 print ("Counter used {}".format(timer_line[1]))
                                 timer_collection.append(timer_line[1])
+                        #if starts with trigger then record trigger
+                        elif str(item).startswith('trigger'):
+                            trigger=str(item)
+                            trigger_line=trigger.split('trigger')
+                            if trigger_line[1]:
+                                print ("Triger used {}".format(trigger_line[1]))
+                                trigger_collection.append(trigger_line[1])
                 else:
                     print("issue occured")
 
@@ -198,6 +212,7 @@ $PFAL,Cnf.Backup"""
     print ("alarm's used are {}".format(alarm_collection))
     print ("counter's used are {}".format(counter_collection))
     print("timer's used are {}".format(timer_collection))
+    print("trigger's used are {}".format(trigger_collection))
 
 def verify_line(line,split_list):
     my_lst_str = ''.join(map(str, split_list))

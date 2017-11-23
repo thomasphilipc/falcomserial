@@ -1,0 +1,90 @@
+updated-timestamp: 9-Nov 2017
+updated-by: thomas.philip@roamworks.com
+dict:
+  - Daihatsu Delta :
+  - Daihatsu Terios:
+  - Mitsubishi Canter :
+  - Nissan Altima :
+  - Nissan DC Pickup  :
+  - Nissan Navara Pickup  :
+  - Nissan Pathfinder :
+  - Nissan SC Pickup : $PFAL,CNF.Set,ECODRIVE.CAR="SC PICKUP",1950,P,170,102,3.3,190
+  - Nissan Urvan 2.5L :
+  - Nissan Urvan 3.0L :
+  - Nissan Xterra 4.0L V6 :
+  - Nissan XTRAIL :
+  - Suzuki Vitara 1.6L : $PFAL,CNF.Set,ECODRIVE.CAR="Vitara M16A",1520,P,160,78,3.3,171
+  - Suzuki Vitara 2.0L :
+  - Suzuki Vitara 2.4L : $PFAL,CNF.Set,ECODRIVE.CAR="Vitara J24B",1890,P,180,122,3.3,208
+  - Suzuki Vitara 3.2L V6 :
+  - Mitsubishi Pajero : $PFAL,CNF.Set,ECODRIVE.CAR="PAJERO SWB",1950,P,200,186,3.3,310
+  - Nissan Patrol Pickup : $PFAL,CNF.Set,ECODRIVE.CAR="PATROL PICKUP",2400,P,180,185,3.3,210
+  - Toyota Hilux 2.7L : $PFAL,CNF.Set,ECODRIVE.CAR="HILUX",1900,P,172,117,3.3,170
+  - Daihatsu Delta :
+  - Daihatsu Terios : $PFAL,CNF.Set,ECODRIVE.CAR="TERIOS",1250,P,160,79,3.3,195
+  - Mitsubishi Canter :
+  - Nissan Altima :
+  - Nissan DC Pickup : $PFAL,CNF.Set,ECODRIVE.CAR="DC PICKUP",1990,P,170,102,3.3,200
+  - Cheverlot SUV : $PFAL,CNF.Set,ECODRIVE.CAR="Chevrolet LUV",1950,P,155,96,3.3,190
+  - Isuzu Dmax :
+  - Nissan Navara Pickup :
+  - Nissan Pathfinder :
+  - Nissan SC Pickup :
+  - Nissan Urvan 2.5L : $PFAL,CNF.Set,ECODRIVE.CAR="URVAN",1975,P,170,107,3.3,188
+  - Nissan Urvan 3.0L :
+  - Nissan Xterra 4.0L V6 :
+  - Nissan XTRAIL :
+  - Suzuki Vitara 1.6L :
+  - Suzuki Vitara 2.0L : $PFAL,CNF.Set,ECODRIVE.CAR="Vitara J20A",1720,P,160,103,3.3,190
+  - Suzuki Vitara 2.4L :
+  - Suzuki Vitara 2.7L V6 : $PFAL,CNF.Set,ECODRIVE.CAR="Vitara H27A",2070,P,180,135,3.3,260
+  - Suzuki Vitara 2.7L V6 ( 7 Seater ) : $PFAL,CNF.Set,ECODRIVE.CAR="Vitara H27A",2300,P,180,135,3.3,260
+  - Suzuki Vitara 3.2L V6 :
+  - Toyota Corolla :
+  - Toyota Camry :
+  - Mitsubishi Pajero :
+  - Nissan Patrol :
+  - Toyota Hiace : $PFAL,CNF.Set,ECODRIVE.CAR="Hiace",2100,P,160,114,3.3,170
+  - Chevrolet TrailBlazer :
+  - Chevrolet TAHOE :
+  - Hyundai Accent :
+  - Hyundai Elantra :
+  - Toyota Hilux 2.7L :
+  - Partner 1.4L :
+  - Partner 1.6L :
+  - Boxer : $PFAL,CNF.Set,ECODRIVE.CAR="BOXER",3000,D,150,97,3.3,197
+  - Toyota Landcruiser Pickup 4L V6 : $PFAL,CNF.Set,ECODRIVE.CAR="LC PICKUP V6",2000,P,180,170,3.3,265
+  - Toyota Fortuner 4L - Manual : $PFAL,CNF.Set,ECODRIVE.CAR="FORTUNER V6",2510,P,187,175,3.3,264
+  - Toyota Fortuner 4L - Automatic : $PFAL,CNF.Set,ECODRIVE.CAR="FORTUNER V6",2510,P,180,175,3.3,264
+  - Mitsubishi Canter 4L : $PFAL,CNF.Set,ECODRIVE.CAR="CANTER",7000,D,107,88,3.3,206
+  - Mitsubishi Fuso 4L : $PFAL,CNF.Set,ECODRIVE.CAR="FUSO",6200,D,107,111,3.3,230
+  - HYUNDAI HD 65 : $PFAL,CNF.Set,ECODRIVE.CAR="HD 65",9000,D,100,118,3.3,230
+  - MERCEDES SPRINTER : $PFAL,CNF.Set,ECODRIVE.CAR="Sprinter",4500,D,150,82,3.3,195
+  - ASTRA : $PFAL,CNF.Set,ECODRIVE.CAR="Astra",35000,D,90,353,3.3,890
+  - NISSAN DIESEL TFA 430 : $PFAL,CNF.Set,ECODRIVE.CAR="Astra",35000,D,90,353,3.3,890
+  - NISSAN DIESEL TZA 520 :
+  - MAN Truck TGA 33.410 : $PFAL,CNF.Set,ECODRIVE.CAR="Astra",35000,D,90,353,3.3,890
+  - MAN Truck TGA 33.420 :
+  - MAN Truck TGA 33.440 :
+  - MAN Truck LE 18.220 :
+  - DAWEOO BUS BF 106 : $PFAL,CNF.Set,ECODRIVE.CAR="Astra",35000,D,90,353,3.3,890
+  - Nissan Juke : $PFAL,CNF.Set,ECODRIVE.CAR="NISS JUKE",1372,P,220,140,3.3,159
+  - Honda Civic : $PFAL,CNF.Set,ECODRIVE.CAR="HOND CIVIC",1270,P,194,103,3.3,152
+  - Toyota Hiace : $PFAL,CNF.Set,ECODRIVE.CAR="TOYO HIACE",1900,P,160,111,3.3,221
+  - Ford Focus : $PFAL,CNF.Set,ECODRIVE.CAR="FORD FOCUS",1316,P,195,91,3.3,169
+  - Mitsubishi L200 (Petrol) : $PFAL,CNF.Set,ECODRIVE.CAR="MITSU L200",1695,P,180,108,3.3,199
+  - Nissan Sunny : $PFAL,CNF.Set,ECODRIVE.CAR="NISS SUNNY",1058,P,178,73,3.3,188
+  - Nissan Sentra : $PFAL,CNF.Set,ECODRIVE.CAR="NISS SENTRA",1184,P,180,84,3.3,156
+  - Ford Figo: $PFAL,CNF.Set,ECODRIVE.CAR="FORD FIGO",1130,P,178,74,3.3,159
+  - Volkswagen Amarok : $PFAL,CNF.Set,ECODRIVE.CAR="VOLK AMAROK",1784,P,179,119,3.3,205
+  - Nissan Xterra : $PFAL,CNF.Set,ECODRIVE.CAR="NISS XTERRA",2100,P,190,194,3.3,280
+  - Toyota Corolla : $PFAL,CNF.Set,ECODRIVE.CAR="Corolla",1200,P,200,102,3.3,179
+  - Isuzu NPR : $PFAL,CNF.Set,ECODRIVE.CAR="ISUZU FTR33P",15000,D,120,149,3.3,500
+  - Isuzu FTR33P : $PFAL,CNF.Set,ECODRIVE.CAR="ISUZU FTR33P",15000,D,120,149,3.3,500
+  - Renault Duster : $PFAL,CNF.Set,ECODRIVE.CAR="DUSTER",1350,P,180,100,3.3,175
+  - Honda City : $PFAL,CNF.Set,ECODRIVE.CAR="Honda City",1150,P,190,88,3.3,120
+  - Nissan Kicks : $PFAL,CNF.Set,ECODRIVE.CAR="Nissan Kicks",1200,P,180,88,3.3,135
+  - Fiat Fullback : $PFAL,CNF.Set,ECODRIVE.CAR="Fiat fullback",1750,P,180,109,3.3,180
+  - Toyota innova : $PFAL,CNF.Set,ECODRIVE.CAR="Innova",1750,P,170,118,3.3,265
+  - Toyota Prado 2.7 : $PFAL,CNF.Set,ECODRIVE.CAR="Prado 2.7",2100,P,170,120,3.3,250
+  - Ford Ranger : $PFAL,CNF.Set,ECODRIVE.CAR="Ford Ranger",2100,P,170,123,3.3,263

@@ -86,7 +86,7 @@ def parse_script():
 //				Operator selection changed to any
 //				DNS updated
 //
-//Device name
+//Device name 
 $PFAL,Cnf.Set,DEVICE.NAME=ROYAL-FM-FOX-MOV-DHL-AN-v2.1
 
 ////Replace for Bolero
@@ -172,6 +172,7 @@ $PFAL,Cnf.Backup"""
                 # print(status)
                 #status true means the actual line and the broken up list are the same
                 if status:
+                    index=0
                     for item in result:
                         #print(item)
                         # if item has $ or PFAL - proceed
@@ -204,16 +205,23 @@ $PFAL,Cnf.Backup"""
                             if trigger_line[1]:
                                 print ("Triger used {}".format(trigger_line[1]))
                                 trigger_collection.append(trigger_line[1])
+                        if str(item)== "=":
+                            if (str(result[index - 1]).__contains__("al")):
+                                print ("")
+                            else:
+                                print (" {}{}{}{}{} = {}".format(result[index - 5],result[index - 4],result[index - 3],result[index - 2],result[index - 1],result[index + 1]))
+                        index += 1
                 else:
                     print("issue occured")
 
-
-    print ("there are a total of {} lines".format(total_line))
-    print ("alarm's used are {}".format(alarm_collection))
-    print ("counter's used are {}".format(counter_collection))
+    print("there are a total of {} lines".format(total_line))
+    print("alarm's used are {}".format(alarm_collection))
+    print("counter's used are {}".format(counter_collection))
     print("timer's used are {}".format(timer_collection))
     print("trigger's used are {}".format(trigger_collection))
 
+
+# function to check if the line and the segmented list is the same
 def verify_line(line,split_list):
     my_lst_str = ''.join(map(str, split_list))
     # print("back to string")
@@ -224,6 +232,8 @@ def verify_line(line,split_list):
     else:
         # print("woops")
         return False
+
+
 ################# CLASS FOR FUNCTIONALITY #######################
 class funtionality :
     name = "None"
@@ -235,6 +245,7 @@ class funtionality :
     hardware_support = []
     counters_used = []
     triggers_used = []
+    timers_used = []
 
 
     def load_functions(self):
